@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CIF Test Case Editor</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="container">
+        <h1>CIF Test Case Editor</h1>
+
+        <section class="card">
+            <h2>Test case</h2>
+
+            <label for="testcaseName">Test case name</label>
+            <input
+                id="testcaseName"
+                type="text"
+                value="Test1"
+                placeholder="Enter test case name"
+            >
+        </section>
+
+        <section class="card">
+            <h2>Add a step</h2>
+
+            <div class="form-grid">
+                <div>
+                    <label>Object</label>
+
+                    <div id="objectTree" class="object-tree"></div>
+
+                    <p>
+                        Selected object:
+                        <strong id="selectedObjectText">None</strong>
+                    </p>
+                </div>
+
+                <div>
+                    <label for="actionSelect">Action</label>
+
+                    <select id="actionSelect">
+                        <option value="">Select an action</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="delayInput">
+                        Delay after previous step
+                    </label>
+
+                    <input
+                        id="delayInput"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value="0"
+                    >
+                </div>
+            </div>
+
+            <button id="addStepButton" type="button">
+                Add step
+            </button>
+
+            <p id="errorMessage" class="error"></p>
+        </section>
+
+        <section class="card">
+            <h2>Steps</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Object</th>
+                        <th>Action</th>
+                        <th>Delay</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody id="stepTableBody">
+                </tbody>
+            </table>
+        </section>
+
+        <section class="card">
+            <button id="exportButton" type="button">
+                Export JSON
+            </button>
+
+            <button id="clearButton" type="button" class="secondary">
+                Clear steps
+            </button>
+        </section>
+
+        <section class="card">
+            <h2>Generated JSON</h2>
+
+            <pre id="jsonOutput"></pre>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

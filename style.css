@@ -1,0 +1,264 @@
+/* ===========================
+   Global
+=========================== */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    color: #222;
+}
+
+.container {
+    width: min(1000px, 92%);
+    margin: 40px auto;
+}
+
+h1 {
+    margin-bottom: 30px;
+}
+
+/* ===========================
+   Cards
+=========================== */
+
+.card {
+    margin-bottom: 20px;
+    padding: 24px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+}
+
+/* ===========================
+   Form
+=========================== */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+}
+
+/* ===========================
+   Buttons
+=========================== */
+
+button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 4px;
+    background: #c90016;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    transition: opacity 0.2s;
+}
+
+button:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+button.secondary {
+    background: #666;
+}
+
+.remove-button {
+    background: #888;
+    padding: 6px 10px;
+}
+
+.move-up-button,
+.move-down-button {
+    background: #666;
+    padding: 6px 10px;
+    margin-right: 4px;
+}
+
+/* ===========================
+   Table
+=========================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #c90016;
+    color: white;
+}
+
+tbody tr:nth-child(even) {
+    background: #f7f7f7;
+}
+
+/* ===========================
+   Messages
+=========================== */
+
+.error {
+    min-height: 20px;
+    color: #b00020;
+    margin-top: 10px;
+}
+
+/* ===========================
+   JSON preview
+=========================== */
+
+pre {
+    min-height: 120px;
+    overflow-x: auto;
+    padding: 16px;
+    background: #222;
+    color: white;
+    border-radius: 4px;
+}
+
+/* ===========================
+   Object Tree
+=========================== */
+
+.object-tree {
+    padding: 1rem;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    background: white;
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+/* Lists */
+
+.tree-list {
+    list-style: none;
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.tree-item {
+    margin: 4px 0;
+}
+
+/* One row */
+
+.tree-node-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Expand button */
+
+.tree-expand-button {
+    width: 24px;
+    height: 24px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 0;
+    margin: 0;
+
+    border: none;
+    background: transparent;
+    color: #444;
+
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.tree-expand-button:hover {
+    color: #c90016;
+}
+
+/* Spacer for nodes without children */
+
+.tree-expand-spacer {
+    display: inline-block;
+    width: 24px;
+}
+
+/* Node names */
+
+.tree-node-name {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 4px;
+}
+
+.tree-category-name {
+    font-weight: bold;
+    color: #444;
+}
+
+.tree-object {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tree-object:hover {
+    background: #eeeeee;
+}
+
+.tree-object.selected {
+    background: #c90016;
+    color: white;
+}
+
+/* Children */
+
+.tree-children {
+    display: none;
+    margin-left: 16px;
+}
+
+.tree-children.open {
+    display: block;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width: 700px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        width: 96%;
+    }
+}
