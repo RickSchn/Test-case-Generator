@@ -398,7 +398,7 @@ function addStep() {
 
     steps.push({
         object: selectedObject.name,
-        objectPath: selectedObject.path,
+        // objectPath: selectedObject.path,
         action: action,
         delay: delay
     });
@@ -499,7 +499,7 @@ function moveStepDown(index) {
 
     const temporaryStep =
         steps[index + 1];
-
+ 
     steps[index + 1] =
         steps[index];
 
@@ -519,9 +519,6 @@ function createTestcaseData() {
         name:
             testcaseName ||
             "UnnamedTest",
-
-        delayType:
-            "relative-to-previous-step",
 
         steps: steps
     };
