@@ -3,108 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Test Case Generator</title>
-
+    <title>Test Suite Builder</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <main class="container">
-        <h1>Test Case Generator</h1>
+        <header class="page-header">
+            <div>
+                <p class="eyebrow">CIF model testing</p>
+                <h1>Test Suite Builder</h1>
+                </p>
+            </div>
 
-        <section class="card">
-            <h2>Test case</h2>
+            <div class="model-status">
+                <span id="modelStatusDot" class="status-dot"></span>
+                <span id="modelStatusText">Using example model data</span>
+            </div>
+        </header>
 
-            <label for="testcaseName">Test case name</label>
-            <input
-                id="testcaseName"
-                type="text"
-                value="Test1"
-                placeholder="Enter test case name"
-            >
-        </section>
-
-        <section class="card">
-            <h2>Add a step</h2>
-
-            <div class="form-grid">
+        <section class="card suite-card">
+            <div class="suite-grid">
                 <div>
-                    <label>Object</label>
-
-                    <div id="objectTree" class="object-tree"></div>
-
-                    <p>
-                        Selected object:
-                        <strong id="selectedObjectText">None</strong>
+                    <label for="suiteName">Test suite name</label>
+                    <input
+                        id="suiteName"
+                        type="text"
+                        value=""
+                        placeholder="Example: Testsuite Bridge"
+                    >
+                    <p class="field-hint">
+                        Letters, numbers and underscores only.
                     </p>
                 </div>
 
-                <div>
-                    <label for="actionSelect">Action</label>
-
-                    <select id="actionSelect">
-                        <option value="">Select an action</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="delayInput">
-                        Delay after previous step
-                    </label>
+                <div class="model-loader">
+                    <label>Model data</label>
 
                     <input
-                        id="delayInput"
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value="0"
+                        id="modelDataFile"
+                        type="file"
+                        accept=".json,application/json"
+                        hidden
                     >
+
+                    <div class="button-row">
+                        <button id="loadModelButton" type="button" class="secondary">
+                            Load model_data.json
+                        </button>
+
+                        <button id="showModelButton" type="button" class="ghost">
+                            Model info
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="testcase-navigation card">
+            <div class="section-heading">
+                <div>
+                    <h2>Test cases</h2>
+                    <p>Create multiple test cases</p>
+                </div>
+
+                <button id="addTestcaseButton" type="button">
+                    + Add test case
+                </button>
+            </div>
+
+            <div id="testcaseTabs" class="testcase-tabs"></div>
+        </section>
+
+        <section id="editorCard" class="card">
+            <div class="editor-title-row">
+                <div class="testcase-name-field">
+                    <label for="testcaseName">Test case name</label>
+                    <input
+                        id="testcaseName"
+                        type="text"
+                        placeholder="Example: Detector During Closing Bridge"
+                    >
+                </div>
+
+                <button
+                    id="deleteTestcaseButton"
+                    type="button"
+                    class="danger-outline"
+                >
+                    Delete test case
+                </button>
+            </div>
+
+            <div class="builder-section">
+                <div class="section-heading compact">
+                    <div>
+                        <h2>Start conditions</h2>
+                        <p>
+                            Inputs that are applied immediately when this test starts
+                        </p>
+                    </div>
+
+                    <button id="addStartButton" type="button" class="secondary">
+                        + Add start condition
+                    </button>
+                </div>
+
+                <div id="startConditions" class="builder-list"></div>
+            </div>
+
+            <div class="builder-section">
+                <div class="section-heading compact">
+                    <div>
+                        <h2>Test steps</h2>
+                        <p>
+                            Add detector inputs, faults or time delays
+                        </p>
+                    </div>
+
+                    <div class="button-row wrap">
+                        <button id="addDetectionStepButton" type="button" class="secondary">
+                            + Detection
+                        </button>
+
+                        <button id="addFaultStepButton" type="button" class="secondary">
+                            + Fault
+                        </button>
+
+                        <button id="addWaitStepButton" type="button" class="secondary">
+                            + Wait
+                        </button>
+                    </div>
+                </div>
+
+                <div id="steps" class="builder-list"></div>
+            </div>
+
+            <p id="errorMessage" class="error" aria-live="polite"></p>
+        </section>
+
+        <section class="card output-card">
+            <div class="section-heading">
+                <div>
+                    <h2>Generated test language</h2>
+                    <p>
+                        Text file for ANTLR
+                    </p>
+                </div>
+
+                <div class="button-row wrap">
+                    <button id="copyButton" type="button" class="secondary">
+                        Copy
+                    </button>
+
+                    <button id="exportButton" type="button">
+                        Export .txt
+                    </button>
                 </div>
             </div>
 
-            <button id="addStepButton" type="button">
-                Add step
-            </button>
-
-            <p id="errorMessage" class="error"></p>
-        </section>
-
-        <section class="card">
-            <h2>Steps</h2>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Step</th>
-                        <th>Object</th>
-                        <th>Action</th>
-                        <th>Delay</th>
-                        <th></th>
-                    </tr>
-                </thead>
-
-                <tbody id="stepTableBody">
-                </tbody>
-            </table>
-        </section>
-
-        <section class="card">
-            <button id="exportButton" type="button">
-                Export Code
-            </button>
-
-            <button id="clearButton" type="button" class="secondary">
-                Clear steps
-            </button>
-        </section>
-
-        <section class="card">
-            <h2>Generated Code</h2>
-
-            <pre id="jsonOutput"></pre>
+            <pre id="codeOutput"></pre>
         </section>
     </main>
+
+    <dialog id="modelDialog">
+        <div class="dialog-header">
+            <h2>Loaded model data</h2>
+            <button id="closeModelDialog" class="icon-button" type="button">
+                ×
+            </button>
+        </div>
+
+        <div id="modelInfo"></div>
+    </dialog>
 
     <script src="script.js"></script>
 </body>
