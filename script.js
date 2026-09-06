@@ -98,6 +98,9 @@ const modelStatusText =
 const showModelButton =
     document.getElementById("showModelButton");
 
+const resetSiteButton =
+    document.getElementById("resetSiteButton");
+
 const modelDialog =
     document.getElementById("modelDialog");
 
@@ -274,6 +277,86 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+
+// ============================================================
+// LOCAL STORAGE
+// ============================================================
+
+const STORAGE_KEY = "testSuiteBuilder";
+
+function saveData() {
+    const data = {
+        suiteName: suiteNameInput.value,
+        testcases: testcases,
+        activeTestcaseIndex: activeTestcaseIndex,
+        modelData: modelData,
+        modelSource: modelSource
+    };
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
+}
+
+function loadData() {
+    const saved =
+        localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+        return;
+    }
+
+    try {
+        const data = JSON.parse(saved);
+
+        if (
+            Array.isArray(data.testcases) &&
+            data.testcases.length > 0
+        ) {
+            testcases = data.testcases;
+        }
+
+        if (typeof data.suiteName === "string") {
+            suiteNameInput.value = data.suiteName;
+        }
+
+        if (
+            Number.isInteger(data.activeTestcaseIndex) &&
+            data.activeTestcaseIndex >= 0 &&
+            data.activeTestcaseIndex < testcases.length
+        ) {
+            activeTestcaseIndex =
+                data.activeTestcaseIndex;
+        }
+
+        if (validateModelData(data.modelData)) {
+            modelData = data.modelData;
+            modelSource =
+                data.modelSource || "Saved model data";
+        }
+    } catch (error) {
+        console.warn(
+            "Could not load saved test suite.",
+            error
+        );
+    }
+}
+
+
+function resetSite() {
+    const confirmed = confirm(
+        "Reset the complete test suite and loaded model data?"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
 }
 
 
@@ -1219,18 +1302,21 @@ function handleStartConditionChange(event) {
     if (select.dataset.role === "start-input") {
         condition.input = select.value;
         updatePreview();
+        saveData();
         return;
     }
 
     if (select.dataset.role === "start-fault-action") {
         condition.action = select.value;
         updatePreview();
+        saveData();
         return;
     }
 
     if (select.dataset.role === "start-fault-component") {
         condition.component = select.value;
         updatePreview();
+        saveData();
     }
 }
 
@@ -1268,16 +1354,19 @@ function handleStepChange(event) {
         case "step-input":
             step.input.input = element.value;
             updatePreview();
+            saveData();
             break;
 
         case "fault-action":
             step.input.action = element.value;
             updatePreview();
+            saveData();
             break;
 
         case "fault-component":
             step.input.component = element.value;
             updatePreview();
+            saveData();
             break;
 
         case "condition-object":
@@ -1293,11 +1382,13 @@ function handleStepChange(event) {
         case "condition-state":
             step.condition.state = element.value;
             updatePreview();
+            saveData();
             break;
 
         case "wait-seconds":
             step.seconds = element.value;
             updatePreview();
+            saveData();
             break;
     }
 }
@@ -1354,6 +1445,8 @@ function renderEverything() {
     updateModelStatus();
 
     errorMessage.textContent = "";
+
+    saveData();
 }
 
 
@@ -1363,7 +1456,10 @@ function renderEverything() {
 
 suiteNameInput.addEventListener(
     "input",
-    updatePreview
+    () => {
+        updatePreview();
+        saveData();
+    }
 );
 
 
@@ -1375,6 +1471,7 @@ testcaseNameInput.addEventListener(
 
         renderTestcaseTabs();
         updatePreview();
+        saveData();
     }
 );
 
@@ -1484,6 +1581,12 @@ modelDataFile.addEventListener(
 );
 
 
+resetSiteButton.addEventListener(
+    "click",
+    resetSite
+);
+
+
 showModelButton.addEventListener(
     "click",
     showModelInformation
@@ -1510,5 +1613,6 @@ modelDialog.addEventListener(
 // START WEBSITE
 // ============================================================
 
+loadData();
 renderEverything();
 tryAutoLoadModelData();
