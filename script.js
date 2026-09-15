@@ -163,6 +163,7 @@ function createInputStep(type) {
             type === "fault"
                 ? createFaultInput()
                 : createDetectionInput(),
+        useCondition: true,
         condition: createDefaultCondition()
     };
 }
@@ -171,8 +172,21 @@ function createInputStep(type) {
 function createWaitStep() {
     return {
         type: "wait",
-        seconds: 5
+        seconds: 5,
+        useCondition: false,
+        condition: createDefaultCondition()
     };
+}
+
+
+function stepUsesCondition(step) {
+    // Backwards compatibility with testcases already stored in localStorage:
+    // input steps previously always had a condition and wait steps did not.
+    if (typeof step.useCondition === "boolean") {
+        return step.useCondition;
+    }
+
+    return step.type !== "wait";
 }
 
 
@@ -423,7 +437,11 @@ function repairSelectionsAfterModelChange() {
                 }
             }
 
-            if (step.type !== "wait") {
+            if (stepUsesCondition(step)) {
+                if (!step.condition) {
+                    step.condition = createDefaultCondition();
+                }
+
                 if (!conditionObjects.includes(step.condition.object)) {
                     step.condition.object =
                         conditionObjects[0] || "";
@@ -921,6 +939,7 @@ function renderSteps() {
 
 
 function renderInputStep(step, index) {
+    const useCondition = stepUsesCondition(step);
     const inputHtml =
         step.type === "fault"
             ? `
@@ -979,21 +998,10 @@ function renderInputStep(step, index) {
                 <div class="inline-sentence">
                     ${inputHtml}
 
-                    <span class="sentence-word">when</span>
-
-                    ${conditionObjectSelectHtml(
-                        step.condition.object,
-                        index
-                    )}
-
-                    <span class="sentence-word">is</span>
-
-                    ${conditionStateSelectHtml(
-                        step.condition.object,
-                        step.condition.state,
-                        index
-                    )}
+                    ${useCondition ? renderConditionHtml(step, index) : ""}
                 </div>
+
+                ${conditionToggleHtml(useCondition, index)}
             </div>
 
             ${stepActionButtons(index)}
@@ -1003,6 +1011,8 @@ function renderInputStep(step, index) {
 
 
 function renderWaitStep(step, index) {
+    const useCondition = stepUsesCondition(step);
+
     return `
         <div class="builder-row step-row">
             <div class="step-badge">${index + 1}</div>
@@ -1026,11 +1036,52 @@ function renderWaitStep(step, index) {
                     >
 
                     <span class="sentence-word">seconds</span>
+
+                    ${useCondition ? renderConditionHtml(step, index) : ""}
                 </div>
+
+                ${conditionToggleHtml(useCondition, index)}
             </div>
 
             ${stepActionButtons(index)}
         </div>
+    `;
+}
+
+
+function renderConditionHtml(step, index) {
+    const condition = step.condition || createDefaultCondition();
+
+    return `
+        <span class="sentence-word">when</span>
+
+        ${conditionObjectSelectHtml(
+            condition.object,
+            index
+        )}
+
+        <span class="sentence-word">is</span>
+
+        ${conditionStateSelectHtml(
+            condition.object,
+            condition.state,
+            index
+        )}
+    `;
+}
+
+
+function conditionToggleHtml(checked, index) {
+    return `
+        <label class="condition-toggle">
+            <input
+                type="checkbox"
+                data-role="use-condition"
+                data-index="${index}"
+                ${checked ? "checked" : ""}
+            >
+            <span>Use when condition</span>
+        </label>
     `;
 }
 
@@ -1098,13 +1149,26 @@ function stepToLanguage(step) {
                 Math.round(Number(step.seconds) || 0)
             );
 
-        return `Wait ${seconds} seconds`;
+        const waitLanguage = `Wait ${seconds} seconds`;
+
+        if (!stepUsesCondition(step)) {
+            return waitLanguage;
+        }
+
+        return (
+            `${waitLanguage} when ` +
+            `${step.condition.object} is ${step.condition.state}`
+        );
     }
 
-    return (
-        `${inputToLanguage(step.input)} ` +
-        `when ${step.condition.object} is ${step.condition.state}`
-    );
+    const inputLanguage = inputToLanguage(step.input);
+
+    if (!stepUsesCondition(step)) {
+        return inputLanguage;
+    }
+
+    return `${inputLanguage} when ` +
+        `${step.condition.object} is ${step.condition.state}`;
 }
 
 
@@ -1185,8 +1249,9 @@ function validateSuite() {
 
         for (const step of testcase.steps) {
             if (
-                step.type !== "wait" &&
+                stepUsesCondition(step) &&
                 (
+                    !step.condition ||
                     !step.condition.object ||
                     !step.condition.state
                 )
@@ -1341,6 +1406,16 @@ function handleStepChange(event) {
     }
 
     switch (element.dataset.role) {
+        case "use-condition":
+            step.useCondition = element.checked;
+
+            if (step.useCondition && !step.condition) {
+                step.condition = createDefaultCondition();
+            }
+
+            renderEverything();
+            break;
+
         case "step-detector":
             step.input.detector = element.value;
             step.input.input =

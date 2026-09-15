@@ -209,6 +209,25 @@ select:focus {
     font-size: 12px;
 }
 
+.condition-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.condition-toggle input {
+    width: 16px;
+    min-height: 16px;
+    margin: 0;
+    accent-color: var(--red);
+}
+
 
 /* ============================================================
    BUTTONS
