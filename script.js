@@ -2,22 +2,9 @@
 
 const emptyModelData = {
     detections: [],
+    faults: [],
     states: []
 };
-
-
-// Fault components currently come from the grammar.
-// Later this can also be moved into model_data.json when fault scanning exists.
-const faultComponents = [
-    "Bridge Motor",
-    "Traffic Barrier 1 Motor",
-    "Traffic Barrier 2 Motor"
-];
-
-const faultActions = [
-    "Disable",
-    "Enable"
-];
 
 
 // ============================================================
@@ -137,10 +124,13 @@ function createDetectionInput() {
 
 
 function createFaultInput() {
+    const component = getFaultComponents()[0] || "";
+    const action = getFaultActionsForComponent(component)[0] || "";
+
     return {
         type: "fault",
-        action: faultActions[0],
-        component: faultComponents[0]
+        action: action,
+        component: component
     };
 }
 
@@ -218,6 +208,29 @@ function getInputsForDetector(detector) {
 }
 
 
+function getFaultComponents() {
+    return [
+        ...new Set(
+            (modelData.faults || [])
+                .map(item => item.object)
+                .filter(Boolean)
+        )
+    ];
+}
+
+
+function getFaultActionsForComponent(component) {
+    return [
+        ...new Set(
+            (modelData.faults || [])
+                .filter(item => item.object === component)
+                .map(item => item.input)
+                .filter(Boolean)
+        )
+    ];
+}
+
+
 function getConditionObjects() {
     return [
         ...new Set(
@@ -255,7 +268,7 @@ function friendlyInputName(input) {
     }
 
     if (lower === "u_fault" || lower === "fault") {
-        return "Apply fault";
+        return "Break";
     }
 
     if (lower === "u_repair" || lower === "repair") {
@@ -382,6 +395,7 @@ function validateModelData(data) {
     return (
         data &&
         Array.isArray(data.detections) &&
+        Array.isArray(data.faults) &&
         Array.isArray(data.states)
     );
 }
@@ -390,7 +404,7 @@ function validateModelData(data) {
 function applyModelData(data, source) {
     if (!validateModelData(data)) {
         throw new Error(
-            "The JSON file must contain 'detections' and 'states' arrays."
+            "The JSON file must contain 'detections', 'faults' and 'states' arrays."
         );
     }
 
@@ -405,6 +419,7 @@ function applyModelData(data, source) {
 
 function repairSelectionsAfterModelChange() {
     const detectorNames = getDetectorNames();
+    const faultComponents = getFaultComponents();
     const conditionObjects = getConditionObjects();
 
     for (const testcase of testcases) {
@@ -421,6 +436,19 @@ function repairSelectionsAfterModelChange() {
                     startCondition.input = inputs[0] || "";
                 }
             }
+
+            if (startCondition.type === "fault") {
+                if (!faultComponents.includes(startCondition.component)) {
+                    startCondition.component = faultComponents[0] || "";
+                }
+
+                const actions =
+                    getFaultActionsForComponent(startCondition.component);
+
+                if (!actions.includes(startCondition.action)) {
+                    startCondition.action = actions[0] || "";
+                }
+            }
         }
 
         for (const step of testcase.steps) {
@@ -434,6 +462,19 @@ function repairSelectionsAfterModelChange() {
 
                 if (!inputs.includes(step.input.input)) {
                     step.input.input = inputs[0] || "";
+                }
+            }
+
+            if (step.type === "fault") {
+                if (!faultComponents.includes(step.input.component)) {
+                    step.input.component = faultComponents[0] || "";
+                }
+
+                const actions =
+                    getFaultActionsForComponent(step.input.component);
+
+                if (!actions.includes(step.input.action)) {
+                    step.input.action = actions[0] || "";
                 }
             }
 
@@ -462,6 +503,7 @@ function repairSelectionsAfterModelChange() {
 
 function updateModelStatus() {
     const detectorCount = getDetectorNames().length;
+    const faultCount = getFaultComponents().length;
     const stateCount = (modelData.states || []).length;
 
     if (!modelSource) {
@@ -473,7 +515,7 @@ function updateModelStatus() {
 
     modelStatusDot.classList.add("loaded");
     modelStatusText.textContent =
-        `${modelSource}: ${detectorCount} detectors, ${stateCount} states`;
+        `${modelSource}: ${detectorCount} detectors, ${faultCount} faults, ${stateCount} states`;
 }
 
 
@@ -608,12 +650,14 @@ function setActiveTestcase(index) {
 
 
 function addStartCondition() {
+    const faultComponent = getFaultComponents()[0] || "";
+
     getActiveTestcase().startConditions.push({
         type: "detection",
         detector: getDetectorNames()[0] || "",
         input: getInputsForDetector(getDetectorNames()[0] || "")[0] || "",
-        action: faultActions[0],
-        component: faultComponents[0]
+        action: getFaultActionsForComponent(faultComponent)[0] || "",
+        component: faultComponent
     });
 
     renderEverything();
@@ -865,10 +909,18 @@ function renderStartConditions() {
                 const inputControls = condition.type === "fault"
                     ? `
                         <select data-role="start-fault-action" data-index="${index}">
-                            ${faultActions.map(value => optionHtml(value, condition.action)).join("")}
+                            ${getFaultActionsForComponent(condition.component)
+                                .map(value =>
+                                    optionHtml(
+                                        value,
+                                        condition.action,
+                                        friendlyInputName(value)
+                                    )
+                                )
+                                .join("")}
                         </select>
                         <select data-role="start-fault-component" data-index="${index}">
-                            ${faultComponents.map(value => optionHtml(value, condition.component)).join("")}
+                            ${getFaultComponents().map(value => optionHtml(value, condition.component)).join("")}
                         </select>
                     `
                     : `
@@ -947,11 +999,12 @@ function renderInputStep(step, index) {
                     data-role="fault-action"
                     data-index="${index}"
                 >
-                    ${faultActions
+                    ${getFaultActionsForComponent(step.input.component)
                         .map(value =>
                             optionHtml(
                                 value,
-                                step.input.action
+                                step.input.action,
+                                friendlyInputName(value)
                             )
                         )
                         .join("")}
@@ -961,7 +1014,7 @@ function renderInputStep(step, index) {
                     data-role="fault-component"
                     data-index="${index}"
                 >
-                    ${faultComponents
+                    ${getFaultComponents()
                         .map(value =>
                             optionHtml(
                                 value,
@@ -1380,8 +1433,9 @@ function handleStartConditionChange(event) {
 
     if (select.dataset.role === "start-fault-component") {
         condition.component = select.value;
-        updatePreview();
-        saveData();
+        condition.action =
+            getFaultActionsForComponent(condition.component)[0] || "";
+        renderEverything();
     }
 }
 
@@ -1440,8 +1494,9 @@ function handleStepChange(event) {
 
         case "fault-component":
             step.input.component = element.value;
-            updatePreview();
-            saveData();
+            step.input.action =
+                getFaultActionsForComponent(step.input.component)[0] || "";
+            renderEverything();
             break;
 
         case "condition-object":

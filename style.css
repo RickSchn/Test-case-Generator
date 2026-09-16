@@ -419,11 +419,14 @@ button.danger-outline:hover:not(:disabled) {
 
 .inline-sentence {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 8px;
 }
 
+.inline-sentence select {
+    min-width: 0;
+}
 .sentence-word {
     color: #626975;
     font-weight: 650;
